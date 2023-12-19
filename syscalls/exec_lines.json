@@ -1,0 +1,57 @@
+{
+    "setup": {
+        "desc": "Semana3",
+        "timeout": 4,
+        "cmds": [
+            "/usr/bin/echo -en \"test\n\" > test-file",
+            "echo sleep 3 > sleep.file"
+        ]
+    },
+    "tests": [
+        {
+            "cmd": "exec_lines -h",
+            "out": "Uso: exec_lines [-p NUMPROC]\nLee de la entrada estándar una secuencia de líneas conteniendo órdenes\npara ser ejecutadas y lanza cada una de dichas órdenes en un proceso diferente.\n-p NUMPROC\tNúmero de procesos en ejecución de forma simultánea (1 <= NUMPROC <= 8)\n"
+        },
+        {
+            "cmd": "exec_lines -p",
+            "out": "exec_lines: option requires an argument -- 'p'\nUso: exec_lines [-p NUMPROC]\nLee de la entrada estándar una secuencia de líneas conteniendo órdenes\npara ser ejecutadas y lanza cada una de dichas órdenes en un proceso diferente.\n-p NUMPROC\tNúmero de procesos en ejecución de forma simultánea (1 <= NUMPROC <= 8)\n",
+            "rc": 1
+
+        },
+        {
+            "cmd": "echo ls test-file| exec_lines -p 0",
+            "out": "Error: El número de procesos en ejecución tiene que estar entre 1 y 8.\nUso: exec_lines [-p NUMPROC]\nLee de la entrada estándar una secuencia de líneas conteniendo órdenes\npara ser ejecutadas y lanza cada una de dichas órdenes en un proceso diferente.\n-p NUMPROC\tNúmero de procesos en ejecución de forma simultánea (1 <= NUMPROC <= 8)\n",
+            "rc": 1
+        },
+        {
+            "cmd": "genera_bytes.py -n 129 | exec_lines",
+            "out": "Error: Tamaño de línea mayor que 128.\n",
+            "rc": 1
+        },
+        {
+            "cmd": "/usr/bin/echo -e \"ls test-file\nls test-file\" | exec_lines",
+            "out": "test-file\ntest-file\n"
+        },
+        {
+            "cmd": "for i in `seq 1 1000`; do echo \"echo $i\"; done | exec_lines > exec_lines.out; md5sum exec_lines.out",
+            "out": "53d025127ae99ab79e8502aae2d9bea6  exec_lines.out\n"
+        },
+        {
+            "cmd": "/usr/bin/echo -ne \"echo -n 1\necho -n 2\necho 3\necho -n 4\necho -n 5\" | exec_lines",
+            "out": "123\n45"
+        },
+        {
+            "cmd": "(/usr/bin/time -p sh -c 'echo \"sleep 1\nsleep 1\nsleep 1\n\" | exec_lines -p 1') 2> time.out ; cat time.out | grep real | cut -d '.' -f 1",
+            "out": "real 3\n"
+        }
+        ,
+        {
+            "cmd": "(/usr/bin/time -p sh -c 'echo \"sleep 1\nsleep 1\nsleep 1\n\" | exec_lines -p 2') 2> time.out ; cat time.out | grep real | cut -d '.' -f 1",
+            "out": "real 2\n"
+        },
+        {
+            "cmd": "(/usr/bin/time -p sh -c 'echo \"sleep 1\nsleep 1\nsleep 1\n\" | exec_lines -p 3') 2> time.out ; cat time.out | grep real | cut -d '.' -f 1",
+            "out": "real 1\n"
+        }
+    ]
+}

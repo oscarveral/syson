@@ -1,0 +1,60 @@
+{
+    "setup": {
+        "desc": "Semana4",
+        "timeout": 3,
+        "cmds": [
+            "/usr/bin/echo -en \"  ABCD\n EFG\n\nH\" > f1",
+            "/usr/bin/echo -en \"123\n45  \n\" > f2",
+            "/usr/bin/echo -en \"\na\nbc\nd\\000e\nfg\nhi\njk\" > f3",
+            "genera_bytes.py -n 100000000 > 100M"
+        ],
+        "binaries": ["merge_files"]
+    },
+    "tests": [
+        {
+            "cmd": "./merge_files -h",
+            "out": "Uso: ./merge_files [-t BUFSIZE] [-o FILEOUT] FILEIN1 [FILEIN2 ... FILEINn]\nNo admite lectura de la entrada estandar.\n-t BUFSIZE\tTamaño de buffer donde 1 <= BUFSIZE <= 128MB\n-o FILEOUT\tUsa FILEOUT en lugar de la salida estandar\n"
+        },
+        {
+            "cmd": "./merge_files",
+            "out": "Error: No hay ficheros de entrada.\nUso: ./merge_files [-t BUFSIZE] [-o FILEOUT] FILEIN1 [FILEIN2 ... FILEINn]\nNo admite lectura de la entrada estandar.\n-t BUFSIZE\tTamaño de buffer donde 1 <= BUFSIZE <= 128MB\n-o FILEOUT\tUsa FILEOUT en lugar de la salida estandar\n",
+            "rc": 1
+        },
+        {
+            "cmd": "./merge_files -t f1 f2",
+            "out": "Error: Tamaño de buffer incorrecto.\nUso: ./merge_files [-t BUFSIZE] [-o FILEOUT] FILEIN1 [FILEIN2 ... FILEINn]\nNo admite lectura de la entrada estandar.\n-t BUFSIZE\tTamaño de buffer donde 1 <= BUFSIZE <= 128MB\n-o FILEOUT\tUsa FILEOUT en lugar de la salida estandar\n",
+            "rc": 1
+        },
+        {
+            "cmd": "./merge_files -t 0 f1 f2",
+            "out": "Error: Tamaño de buffer incorrecto.\nUso: ./merge_files [-t BUFSIZE] [-o FILEOUT] FILEIN1 [FILEIN2 ... FILEINn]\nNo admite lectura de la entrada estandar.\n-t BUFSIZE\tTamaño de buffer donde 1 <= BUFSIZE <= 128MB\n-o FILEOUT\tUsa FILEOUT en lugar de la salida estandar\n",
+            "rc": 1
+        },
+        {
+            "cmd": "./merge_files f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 f14 f15 f16 f17",
+            "out": "Error: Demasiados ficheros de entrada. Máximo 16 ficheros.\nUso: ./merge_files [-t BUFSIZE] [-o FILEOUT] FILEIN1 [FILEIN2 ... FILEINn]\nNo admite lectura de la entrada estandar.\n-t BUFSIZE\tTamaño de buffer donde 1 <= BUFSIZE <= 128MB\n-o FILEOUT\tUsa FILEOUT en lugar de la salida estandar\n",
+            "rc": 1
+        },
+        {
+            "cmd": "./merge_files -t1 f1",
+            "out": "  ABCD\n EFG\n\nH"
+        },
+        {
+            "cmd": "./merge_files -t1 f1 f2",
+            "out": "  ABCD\n123\n EFG\n45  \n\nH"
+        },
+        {
+            "cmd": "./merge_files -t1 f1 f2 f3",
+            "out": "  ABCD\n123\n\n EFG\n45  \na\n\nbc\nHd\u0000e\nfg\nhi\njk"
+        },
+        {
+            "cmd": "./merge_files -o salida -t1 f1 f2 nofile f3; cat salida",
+            "out": "Aviso: No se puede abrir 'nofile': No such file or directory\n  ABCD\n123\n\n EFG\n45  \na\n\nbc\nHd\u0000e\nfg\nhi\njk"
+        },
+        {
+            "cmd": "./merge_files -t 8192 100M 100M | md5sum -b | cut -d ' ' -f 1",
+            "out": "40c01f28bd5a1a352a49c01dd4458cf5\n",
+           "timeout": 10
+        }
+    ]
+}

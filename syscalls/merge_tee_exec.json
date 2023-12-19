@@ -1,0 +1,63 @@
+{
+    "setup": {
+        "desc": "Semana4",
+        "timeout": 3,
+        "cmds": [
+            "/usr/bin/echo -e \"   echo 1\n  echo 1\" > f1",
+            "/usr/bin/echo -e \"echo 2\n  echo 2\" > f2",
+            "/usr/bin/echo -e \"       echo 3    \n  echo     3     \" > f3",
+            "for i in `seq 1 100`; do echo \"echo $i\"; done > f100",
+            "for i in `seq 1 5`; do echo \"sleep 1\"; done > s5"
+        ],
+        "binaries": ["exec_lines", "merge_files", "merge_tee_exec"]
+    },
+    "tests": [
+        {
+            "cmd": "./merge_tee_exec -h",
+            "out": "Uso: ./merge_tee_exec -l LOGFILE [-t BUFSIZE] [-p NUMPROC] FILEIN1 [FILEIN2 ... FILEINn]\nNo admite lectura de la entrada estandar.\n-t BUFSIZE\tTamaño de buffer donde 1 <= BUFSIZE <= 128MB\n-l LOGFILE\tNombre del archivo de log.\n-p NUMPROC\tNúmero de procesos en ejecución de forma simultánea (1 <= NUMPROC <= 8)\n"
+        },
+        {
+            "cmd": "./merge_tee_exec",
+            "out": "Error: No hay fichero de log.\nUso: ./merge_tee_exec -l LOGFILE [-t BUFSIZE] [-p NUMPROC] FILEIN1 [FILEIN2 ... FILEINn]\nNo admite lectura de la entrada estandar.\n-t BUFSIZE\tTamaño de buffer donde 1 <= BUFSIZE <= 128MB\n-l LOGFILE\tNombre del archivo de log.\n-p NUMPROC\tNúmero de procesos en ejecución de forma simultánea (1 <= NUMPROC <= 8)\n",
+            "rc": 1
+        },
+        {
+            "cmd": "./merge_tee_exec -l log.txt -t 0",
+            "out": "Error: Tamaño de buffer incorrecto.\nUso: ./merge_tee_exec -l LOGFILE [-t BUFSIZE] [-p NUMPROC] FILEIN1 [FILEIN2 ... FILEINn]\nNo admite lectura de la entrada estandar.\n-t BUFSIZE\tTamaño de buffer donde 1 <= BUFSIZE <= 128MB\n-l LOGFILE\tNombre del archivo de log.\n-p NUMPROC\tNúmero de procesos en ejecución de forma simultánea (1 <= NUMPROC <= 8)\n",
+            "rc": 1
+        },
+        {
+            "cmd": "./merge_tee_exec -t 1024 -l log.txt",
+            "out": "Error: No hay ficheros de entrada.\nUso: ./merge_tee_exec -l LOGFILE [-t BUFSIZE] [-p NUMPROC] FILEIN1 [FILEIN2 ... FILEINn]\nNo admite lectura de la entrada estandar.\n-t BUFSIZE\tTamaño de buffer donde 1 <= BUFSIZE <= 128MB\n-l LOGFILE\tNombre del archivo de log.\n-p NUMPROC\tNúmero de procesos en ejecución de forma simultánea (1 <= NUMPROC <= 8)\n",
+            "rc": 1
+        },
+        {
+            "cmd": "./merge_tee_exec -t 1024 -l log.txt -p 0 f1 f2",
+            "out": "Error: El número de procesos en ejecución tiene que estar entre 1 y 8.\nUso: ./merge_tee_exec -l LOGFILE [-t BUFSIZE] [-p NUMPROC] FILEIN1 [FILEIN2 ... FILEINn]\nNo admite lectura de la entrada estandar.\n-t BUFSIZE\tTamaño de buffer donde 1 <= BUFSIZE <= 128MB\n-l LOGFILE\tNombre del archivo de log.\n-p NUMPROC\tNúmero de procesos en ejecución de forma simultánea (1 <= NUMPROC <= 8)\n",
+            "rc": 1
+        },
+        {
+            "cmd": "./merge_tee_exec -t 1024 -l log.txt -p 1 f1 f2 f3 f4 f5 f6 f7 f8 f9 f10 f11 f12 f13 f14 f15 f16 f17",
+            "out": "Error: Demasiados ficheros de entrada. Máximo 16 ficheros.\nUso: ./merge_files [-t BUFSIZE] [-o FILEOUT] FILEIN1 [FILEIN2 ... FILEINn]\nNo admite lectura de la entrada estandar.\n-t BUFSIZE\tTamaño de buffer donde 1 <= BUFSIZE <= 128MB\n-o FILEOUT\tUsa FILEOUT en lugar de la salida estandar\n",
+            "rc": 1
+        },
+        {
+            "cmd": "./merge_tee_exec -t 1024 -l log.txt -p 1 f1 f2 f3; cat log.txt",
+            "out": "1\n2\n3\n1\n2\n3\n   echo 1\necho 2\n       echo 3    \n  echo 1\n  echo 2\n  echo     3     \n"
+        },
+        {
+            "cmd": "./merge_tee_exec -t 1024 -l log.txt -p 1 f100 f100 f100 > exec_lines.out; md5sum exec_lines.out | cut -f1 -d' '",
+            "out": "5be39598bfdbc6774732d6581262e272\n"
+        },
+        {
+            "cmd": "(/usr/bin/time -p sh -c './merge_tee_exec -t 1024 -l log.txt -p 1 s5') 2> time.out ; cat time.out | grep real | cut -d '.' -f 1",
+            "out": "real 5\n",
+            "timeout": 6
+        },
+        {
+            "cmd": "(/usr/bin/time -p sh -c './merge_tee_exec -t 1024 -l log.txt -p 5 s5 s5 s5 s5 s5') 2> time.out ; cat time.out | grep real | cut -d '.' -f 1",
+            "out": "real 5\n",
+            "timeout": 6
+        }
+    ]
+}
